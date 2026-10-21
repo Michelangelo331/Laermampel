@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Lärm-Fledermaus</title>
+<title>Lärmampel 4C</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -194,6 +194,29 @@ input[type=text]{width:180px}
 #goalDialog .dialog{text-align:center}
 #goalDialog .big{font-size:30px;font-weight:900;margin:8px 0}
 
+/* ---------- Themen ---------- */
+#fig{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 8px 14px rgba(0,0,0,.25))}
+#batWrap.shake #fig{animation:shake .5s ease-in-out 3}
+.figBob{animation:bob 3.2s ease-in-out infinite}
+.sway{animation:sway 4s ease-in-out infinite}
+.wiggle{animation:wiggle 1.6s ease-in-out infinite}
+@keyframes wiggle{0%,100%{transform:rotate(0)}50%{transform:rotate(-9deg)}}
+.flyAround{animation:flyAround 6s linear infinite}
+@keyframes flyAround{0%{transform:translate(0,0)}25%{transform:translate(40px,-25px)}50%{transform:translate(80px,0)}75%{transform:translate(40px,20px)}100%{transform:translate(0,0)}}
+.melt{animation:melt 2.2s ease-in-out infinite}
+@keyframes melt{0%,100%{transform:scale(1,1)}50%{transform:scale(1.04,.96)}}
+.fog{animation:drift 140s linear infinite}
+.snow{position:absolute;top:-20px;border-radius:50%;background:#fff;opacity:.9;animation:snowfall linear infinite;box-shadow:0 0 4px rgba(255,255,255,.8)}
+@keyframes snowfall{0%{transform:translate(0,0)}50%{transform:translate(30px,55vh)}100%{transform:translate(-10px,112vh)}}
+.conf{position:absolute;top:-30px;width:10px;height:14px;border-radius:2px;animation:fall linear infinite}
+.petal{position:absolute;top:-40px;width:14px;height:12px;border-radius:80% 0 80% 0;opacity:.9;animation:fall linear infinite}
+.critter{position:absolute;font-size:26px;animation:float 9s ease-in-out infinite}
+body.night .critter{opacity:.35}
+.themeGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.themeGrid button{border:2px solid #efe3f3;background:#fff;border-radius:12px;padding:8px 10px;font-weight:800;color:#5b3f66;text-align:left;display:flex;gap:8px;align-items:center}
+.themeGrid button.on{border-color:#9b6bb5;background:#f6eefa}
+.themeGrid button small{display:block;font-weight:700;opacity:.65;font-size:11px}
+
 @media (max-aspect-ratio:3/4){
   #batWrap{top:52%;width:min(44vh,82vw)}
   #left{top:auto;bottom:calc(max(12px,env(safe-area-inset-bottom)) + clamp(60px,10vh,92px) + 26px);flex-direction:row}
@@ -281,6 +304,7 @@ input[type=text]{width:180px}
     </g>
   </g>
 
+  <g id="themeDeko"></g>
   <!-- Halloween-Deko -->
   <g id="halloween">
     <path id="garland" d="M-20 70 Q300 200 640 90 Q960 -5 1320 120 Q1480 170 1620 60" stroke="#5a3f2e" stroke-width="3" fill="none"/>
@@ -404,11 +428,12 @@ input[type=text]{width:180px}
       <text class="zz" x="222" y="262" font-size="22">z</text><text class="zz" x="240" y="238" font-size="28">z</text><text class="zz" x="258" y="210" font-size="34">Z</text>
     </g>
   </svg>
+  <svg id="fig" viewBox="0 0 300 330" style="display:none"></svg>
 </div>
 
 <!-- ================= HUD ================= -->
 <div id="top">
-  <div id="title">Lärm-Fledermaus</div>
+  <div id="title">Lärmampel 4C</div>
   <div id="stageLabel">Psst … super leise!</div>
 </div>
 
@@ -439,7 +464,7 @@ input[type=text]{width:180px}
 
 <div id="tools">
   <button class="tool" id="tDay" title="Tag / Nacht">🌙</button>
-  <button class="tool" id="tHallo" title="Halloween an/aus">🎃</button>
+  <button class="tool" id="tTheme" title="Thema wechseln">🍂</button>
   <button class="tool" id="tMic" title="Mikrofon an/aus">🎤</button>
   <button class="tool" id="tSound" title="Ton an/aus">🔊</button>
   <button class="tool" id="tFull" title="Vollbild">⛶</button>
@@ -463,6 +488,12 @@ input[type=text]{width:180px}
 <div class="overlay" id="settings">
   <div class="dialog">
     <h2>Einstellungen <button class="x" data-close>✕</button></h2>
+
+    <section>
+      <h3 style="margin-top:0">Thema</h3>
+      <div class="themeGrid" id="themeGrid"></div>
+      <p class="hint" id="themeHint"></p>
+    </section>
 
     <section>
       <h3 style="margin-top:0">Steuerung</h3>
@@ -522,14 +553,14 @@ input[type=text]{width:180px}
     <section>
       <h3 style="margin-top:0">Allgemein</h3>
       <div class="row"><label>Ton</label><label class="switch"><input type="checkbox" id="soundOn"><span></span></label></div>
-      <p class="hint">Tasten: 1–4 Stufe · T Tag/Nacht · H Halloween · M Mikrofon · F Vollbild · P Pause · + / − Stern</p>
+      <p class="hint">Tasten: 1–4 Stufe · T Tag/Nacht · H Thema wechseln · M Mikrofon · F Vollbild · P Pause · + / − Stern</p>
     </section>
   </div>
 </div>
 
 <div class="overlay" id="evalDialog">
   <div class="dialog">
-    <div style="font-size:26px;font-weight:900">Auswertung 🦇</div>
+    <div style="font-size:26px;font-weight:900">Auswertung <span class="themeIco">🦇</span></div>
     <div id="evalBars"></div>
     <div id="evalStars"></div>
     <div id="evalMsg"></div>
@@ -539,7 +570,7 @@ input[type=text]{width:180px}
 
 <div class="overlay" id="goalDialog">
   <div class="dialog">
-    <div style="font-size:70px">🎉🦇🎉</div>
+    <div style="font-size:70px">🎉<span class="themeIco">🦇</span>🎉</div>
     <div class="big">Geschafft!</div>
     <div style="font-size:22px;font-weight:800" id="goalText"></div>
     <div class="row" style="justify-content:center;margin-top:18px">
@@ -553,9 +584,9 @@ input[type=text]{width:180px}
 (() => {
 "use strict";
 const $ = id => document.getElementById(id);
-const KEY = "laermFledermaus.v1";
+const KEY = "laermampel4c.v1";
 const LABELS = ["", "Psst … super leise!", "Etwas zu laut", "Viel zu laut!", "Lärm-Alarm!"];
-const DEF = {night:true, halloween:true, sound:true, mode:"hand", t2:40, t3:58, t4:75, react:1.5, calm:3,
+const DEF = {night:true, theme:"auto", sound:true, mode:"hand", t2:40, t3:58, t4:75, react:1.5, calm:3,
   timerOn:true, timerMin:20, goal:20, reward:"Spielpause", removeOn:false, diamonds:0,
   g2:80, g1:50, redMax:5, pauseLabel:"Ich erkläre kurz", pauseIcon:"✋", ver:2};
 let S = Object.assign({}, DEF);
@@ -629,20 +660,7 @@ const sndGoal = () => tone([523,659,784,1047,784,1047], 0.3, "triangle", 0.13);
     pk.appendChild(g);
   };
   pumpkin(470,790,1.1,true); pumpkin(545,805,.7,false); pumpkin(1130,800,1.25,true); pumpkin(1215,812,.75,true); pumpkin(220,840,.8,false);
-  // Blätter & Glühwürmchen
-  const fx = $("fx"), lc = ["#f0a030","#e46c2c","#f7c948","#d9542b","#c9844a"];
-  for (let i=0;i<14;i++){
-    const l = document.createElement("div"); l.className="leaf";
-    l.style.left = (Math.random()*100)+"vw"; l.style.background = lc[i%lc.length];
-    l.style.animationDuration = (9+Math.random()*9)+"s"; l.style.animationDelay = (-Math.random()*18)+"s";
-    fx.appendChild(l);
-  }
-  for (let i=0;i<16;i++){
-    const f = document.createElement("div"); f.className="firefly";
-    f.style.left = (Math.random()*96)+"vw"; f.style.top = (45+Math.random()*50)+"vh";
-    f.style.animationDuration = (6+Math.random()*6)+"s"; f.style.animationDelay = (-Math.random()*8)+"s";
-    fx.appendChild(f);
-  }
+  const fx = $("fx");
   setInterval(() => {
     if (!S.night || Math.random() < .5) return;
     const s = document.createElement("div"); s.className = "shooting";
@@ -650,6 +668,378 @@ const sndGoal = () => tone([523,659,784,1047,784,1047], 0.3, "triangle", 0.13);
     fx.appendChild(s); setTimeout(() => s.remove(), 1400);
   }, 9000);
 })();
+
+/* ================= Themen (wechseln automatisch nach Datum) ================= */
+const THEMES = {
+  herbst:   {name:"Herbst",               ico:"🍂", fig:"bat",     sub:"Fledermaus"},
+  halloween:{name:"Halloween",            ico:"🎃", fig:"bat",     sub:"Fledermaus"},
+  november: {name:"St. Martin",           ico:"🏮", fig:"igel",    sub:"Igel"},
+  advent:   {name:"Advent & Weihnachten", ico:"🎄", fig:"snowX",   sub:"Schneemann"},
+  winter:   {name:"Winter",               ico:"❄️", fig:"snow",    sub:"Schneemann"},
+  fasching: {name:"Fasching",             ico:"🎭", fig:"clown",   sub:"Clown"},
+  fruehling:{name:"Frühling",             ico:"🌸", fig:"flower",  sub:"Blüte"},
+  ostern:   {name:"Ostern",               ico:"🐰", fig:"bunny",   sub:"Osterhase"},
+  sommer:   {name:"Sommer",               ico:"🐞", fig:"ladybug", sub:"Marienkäfer"}
+};
+const ORDER = Object.keys(THEMES);
+const day0 = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const addD = (d,n) => new Date(d.getFullYear(), d.getMonth(), d.getDate()+n);
+// Ostersonntag (Gauß/Meeus) – wird für jedes Jahr neu berechnet
+function easter(y){
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),
+        h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),
+        n=h+l-7*m+114;
+  return new Date(y, Math.floor(n/31)-1, (n%31)+1);
+}
+// 1. Advent = 4. Sonntag vor dem 25.12.
+function advent1(y){ const x = new Date(y,11,25), w = x.getDay(); return addD(x, -(w===0?7:w) - 21); }
+function themeFor(date){
+  const d = day0(date), y = d.getFullYear(), m = d.getMonth(), dd = d.getDate(), E = easter(y);
+  if (d >= addD(E,-14) && d <= addD(E,8))  return "ostern";    // ca. Osterferien
+  if (d >= addD(E,-55) && d <= addD(E,-46)) return "fasching";  // Woche vor Rosenmontag bis Aschermittwoch
+  if (d >= advent1(y) || (m===0 && dd<=6))  return "advent";    // 1. Advent bis Hl. Drei Könige
+  if (m<=1) return "winter";
+  if (m<=3) return "fruehling";
+  if (m<=7) return "sommer";
+  if (m===8) return "herbst";
+  if (m===9) return dd>=17 ? "halloween" : "herbst";
+  return dd<=2 ? "halloween" : "november";
+}
+// Link-Parameter: ?thema=winter  oder  ?datum=2026-12-07 (z. B. vom Wochenplaner)
+const QP = new URLSearchParams(location.search);
+let urlTheme = THEMES[QP.get("thema")] ? QP.get("thema") : null;
+let refDate = null;
+{ const mm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(QP.get("datum")||""); if (mm) refDate = new Date(+mm[1], +mm[2]-1, +mm[3]); }
+const autoTheme = () => themeFor(refDate || new Date());
+const curThemeKey = () => urlTheme || (S.theme !== "auto" && THEMES[S.theme] ? S.theme : autoTheme());
+let curTheme = "herbst";
+
+/* ---------- Bausteine für die Landschaften ---------- */
+const ORIG_LAND = $("land").innerHTML;
+const hillsBack = (a,b) => `<path d="M0 560 Q200 470 420 540 T860 520 T1300 500 T1600 530 V900 H0Z" fill="${a}"/>
+  <path d="M0 640 Q250 560 520 630 T1050 610 T1600 600 V900H0Z" fill="${b}"/>`;
+const hillFront1 = c => `<path d="M0 730 Q400 660 800 705 T1600 690 V900 H0Z" fill="${c}"/>`;
+const hillFront2 = c => `<path d="M0 800 Q500 750 900 790 T1600 780 V900 H0Z" fill="${c}"/>`;
+const fir = (x,y,s,snow,col="#2f6b4a") => `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-9" y="-4" width="18" height="34" fill="#6b4a32"/>
+  <path d="M-62 4 L0 -64 L62 4Z" fill="${col}"/><path d="M-50 -34 L0 -104 L50 -34Z" fill="${col}"/><path d="M-36 -74 L0 -142 L36 -74Z" fill="${col}"/>
+  ${snow?`<path d="M-24 -96 L0 -142 L24 -96 Q12 -102 0 -96 Q-12 -102 -24 -96Z" fill="#fff"/>
+  <path d="M-36 -56 L-22 -74 Q-10 -68 0 -74 Q10 -68 22 -74 L36 -56 Q22 -62 10 -56 Q0 -64 -10 -56 Q-22 -62 -36 -56Z" fill="#fff"/>
+  <path d="M-48 -14 L-34 -30 Q-18 -24 0 -30 Q18 -24 34 -30 L48 -14 Q32 -20 18 -14 Q0 -22 -18 -14 Q-32 -20 -48 -14Z" fill="#fff"/>`:""}</g>`;
+const house = (x,y,w,h,wall,roof,snow) => `<g transform="translate(${x} ${y})">
+  <rect x="0" y="${-h}" width="${w}" height="${h}" fill="${wall}"/>
+  <path d="M-10 ${-h} L${w/2} ${-h-w*0.55} L${w+10} ${-h}Z" fill="${roof}"/>
+  ${snow?`<path d="M-12 ${-h+2} L${w/2} ${-h-w*0.55-5} L${w+12} ${-h+2} Q${w*0.8} ${-h-7} ${w*0.6} ${-h-3} Q${w*0.4} ${-h-9} ${w*0.2} ${-h-3} Q${w*0.05} ${-h-8} -12 ${-h+2}Z" fill="#fff"/>`:""}
+  <rect class="towerWin" x="${w*0.14}" y="${-h*0.74}" width="${w*0.24}" height="${h*0.28}" rx="3"/>
+  <rect class="towerWin" x="${w*0.62}" y="${-h*0.74}" width="${w*0.24}" height="${h*0.28}" rx="3"/>
+  <rect x="${w*0.4}" y="${-h*0.38}" width="${w*0.2}" height="${h*0.38}" rx="4" fill="#6b4a32"/></g>`;
+const bare = (x,y,s) => `<g transform="translate(${x} ${y}) scale(${s})" stroke="#4e3b2e" stroke-linecap="round" fill="none">
+  <path d="M0 0 C-6 -60 6 -120 0 -180" stroke-width="18"/>
+  <path d="M0 -90 C-30 -110 -50 -130 -70 -170" stroke-width="9"/><path d="M0 -120 C30 -140 50 -160 60 -200" stroke-width="8"/>
+  <path d="M-42 -126 C-56 -130 -70 -128 -86 -136" stroke-width="4"/><path d="M32 -150 C46 -150 56 -146 72 -152" stroke-width="4"/>
+  <path d="M0 -180 C-10 -200 -15 -215 -26 -232" stroke-width="6"/><path d="M0 -180 C10 -200 20 -212 26 -238" stroke-width="6"/>
+  <path d="M-70 -170 C-80 -180 -84 -190 -96 -196" stroke-width="3"/><path d="M60 -200 C66 -212 76 -218 84 -230" stroke-width="3"/></g>`;
+const bigTrees = (c, dots, trunk="#7a4b2a") => `<path d="M60 900 C70 700 40 520 110 330 C130 280 150 260 170 240 L190 255 C150 330 140 450 150 560 C160 700 170 800 190 900Z" fill="${trunk}"/>
+  <path d="M120 360 C180 320 240 300 300 300" stroke="${trunk}" stroke-width="18" fill="none" stroke-linecap="round"/>
+  <g><circle cx="40" cy="120" r="110" fill="${c[0]}"/><circle cx="170" cy="80" r="100" fill="${c[1]}"/><circle cx="290" cy="150" r="90" fill="${c[2]}"/>
+  <circle cx="80" cy="250" r="90" fill="${c[1]}"/><circle cx="220" cy="230" r="80" fill="${c[3]}"/><circle cx="330" cy="280" r="55" fill="${c[0]}"/>
+  <circle cx="-20" cy="320" r="80" fill="${c[2]}"/><circle cx="120" cy="-10" r="90" fill="${c[3]}"/></g>
+  <path d="M1600 900 V250 C1560 300 1540 380 1545 520 C1550 700 1530 820 1520 900Z" fill="${trunk}"/>
+  <g><circle cx="1560" cy="60" r="110" fill="${c[1]}"/><circle cx="1460" cy="-10" r="90" fill="${c[0]}"/><circle cx="1620" cy="200" r="90" fill="${c[3]}"/><circle cx="1500" cy="140" r="70" fill="${c[2]}"/></g>
+  ${dots ? `<g fill="${dots}" opacity=".85">${[[60,90],[150,150],[250,120],[90,220],[200,260],[300,210],[30,300],[1500,60],[1560,170],[1440,30],[130,40],[260,300]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="9"/><circle cx="${x+14}" cy="${y+10}" r="6"/>`).join("")}</g>` : ""}`;
+const flower = (x,y,col,s=1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 V24" stroke="#4f8f3a" stroke-width="3"/><g fill="${col}"><circle cx="0" cy="-7" r="6"/><circle cx="7" cy="-1" r="6"/><circle cx="4" cy="7" r="6"/><circle cx="-4" cy="7" r="6"/><circle cx="-7" cy="-1" r="6"/></g><circle cx="0" cy="1" r="4.5" fill="#ffd34f"/></g>`;
+const tulip = (x,y,col) => `<g transform="translate(${x} ${y})"><path d="M0 0 V38" stroke="#4f8f3a" stroke-width="4"/><path d="M0 32 q-14 -6 -16 -22 q10 4 16 16z" fill="#5fa04a"/><path d="M-11 -14 Q-12 6 0 8 Q12 6 11 -14 L6 -6 L0 -16 L-6 -6Z" fill="${col}"/></g>`;
+const egg = (x,y,col,s=1,r=0) => `<g transform="translate(${x} ${y}) rotate(${r}) scale(${s})"><ellipse cx="0" cy="0" rx="15" ry="20" fill="${col}"/><path d="M-14 -3 l7 -5 l7 5 l7 -5 l7 5" stroke="#fff" stroke-width="3" fill="none" stroke-linejoin="round"/><circle cx="-5" cy="9" r="2.5" fill="#fff"/><circle cx="5" cy="9" r="2.5" fill="#fff"/></g>`;
+const sunflower = (x,y,s=1) => { let p=""; for(let i=0;i<12;i++) p+=`<ellipse cx="0" cy="-22" rx="8" ry="16" fill="#ffc83d" transform="rotate(${i*30})"/>`;
+  return `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 10 V150" stroke="#4f8f3a" stroke-width="7"/><path d="M0 80 q-30 -10 -36 -34 q24 2 36 24z M0 104 q30 -10 36 -34 q-24 2 -36 24z" fill="#5fa04a"/>${p}<circle r="17" fill="#8a5a2b"/></g>`; };
+const balloon = (x,y,col) => `<path d="M${x} ${y+38} q-10 40 6 90" stroke="#7a6a80" stroke-width="2" fill="none"/><ellipse cx="${x}" cy="${y}" rx="28" ry="36" fill="${col}"/><path d="M${x-5} ${y+35} l5 7 l5 -7z" fill="${col}"/><ellipse cx="${x-9}" cy="${y-12}" rx="6" ry="10" fill="#fff" opacity=".45"/>`;
+function bunting(x0,x1,y,sag,cols){
+  const cy = y+sag*2; let s=`<path d="M${x0} ${y} Q${(x0+x1)/2} ${cy} ${x1} ${y}" stroke="#5a3f2e" stroke-width="3" fill="none"/>`;
+  const n = Math.round((x1-x0)/58);
+  for (let i=1;i<n;i++){ const t=i/n, x=x0+(x1-x0)*t, yy=(1-t)*(1-t)*y+2*(1-t)*t*cy+t*t*y;
+    s+=`<path d="M${x-17} ${yy} L${x+17} ${yy} L${x} ${yy+36}Z" fill="${cols[i%cols.length]}"/>`; }
+  return s;
+}
+const lantern = (x,y,col) => `<g transform="translate(${x} ${y})"><path d="M0 0 Q-10 60 -30 130" stroke="#6b4a32" stroke-width="4" fill="none"/><path d="M0 0 V14" stroke="#5a3f2e" stroke-width="2"/>
+  <circle class="nightOnly" cx="0" cy="38" r="52" fill="url(#gGlow)"/><circle cx="0" cy="38" r="24" fill="${col}"/><circle cx="0" cy="38" r="15" fill="#fff6c0" opacity=".45"/>
+  <rect x="-14" y="12" width="28" height="5" rx="2" fill="#5a3f2e"/><rect x="-14" y="59" width="28" height="5" rx="2" fill="#5a3f2e"/></g>`;
+function xmasTree(x,y,s){
+  const pts=[[-40,-8],[0,-18],[38,-10],[-30,-48],[22,-56],[-12,-86],[16,-98],[-4,-122],[46,0],[-52,2],[34,-44],[-22,-104]];
+  const cols=["#ff5a5a","#ffd75e","#7ec8ff","#ff9a3c","#b07cff"];
+  const b = pts.map((p,i)=>`<circle class="bulb" style="color:${cols[i%5]}" cx="${p[0]}" cy="${p[1]}" r="6" fill="${cols[i%5]}"/>`).join("");
+  return `<g transform="translate(${x} ${y}) scale(${s})">${fir(0,0,1,true)}${b}<path class="twinkle" d="M0 -176 l7 15 l16 2 l-12 11 l3 16 l-14 -8 l-14 8 l3 -16 l-12 -11 l16 -2z" fill="#ffd34f"/></g>`;
+}
+const FLOWERCOLS = ["#ff8fb1","#ffffff","#ffd34f","#b07cff","#ff6b6b","#7ec8ff"];
+const meadowFlowers = (list) => list.map(([x,y],i)=>flower(x,y,FLOWERCOLS[i%FLOWERCOLS.length], .9+((i*37)%5)/10)).join("");
+const FL_POS = [[250,770],[420,800],[520,760],[640,820],[700,775],[880,815],[960,770],[1060,825],[1180,775],[1250,830],[1380,790],[330,850],[560,860],[800,860],[1120,870],[1300,860],[1460,840],[90,840]];
+
+const SCENES = {
+  herbst:   () => ({land: ORIG_LAND}),
+  halloween:() => ({land: ORIG_LAND}),
+  november: () => ({
+    land: hillsBack("#b6a68f","#9f8f78")
+      + bare(980,560,.5) + bare(1080,545,.42) + bare(620,545,.45)
+      + `<g fill="#ffffff" opacity=".35"><ellipse class="fog" cx="300" cy="600" rx="420" ry="26"/><ellipse class="fog" cx="900" cy="630" rx="520" ry="22" style="animation-delay:-60s"/></g>`
+      + hillFront1("#8e9466") + `<g fill="#b8743a">${[[300,760],[520,740],[760,770],[1010,750],[1240,765],[420,790],[880,795]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="9" ry="5"/>`).join("")}</g>`
+      + hillFront2("#7c8656") + bare(150,905,2.4) + bare(1490,905,2.1)
+      + `<g fill="#ffffff" opacity=".28"><ellipse class="fog" cx="600" cy="760" rx="600" ry="30" style="animation-delay:-30s"/></g>`,
+    deko: lantern(430,640,"#ff9a3c") + lantern(560,670,"#ff5a5a") + lantern(1120,645,"#ffd34f") + lantern(1260,675,"#7ec8ff")
+  }),
+  advent: () => ({
+    land: hillsBack("#e7eef8","#dce6f3")
+      + fir(600,520,.35,true) + fir(650,530,.28,true)
+      + house(950,598,70,55,"#d98c6a","#9b4a3a",true) + house(1040,588,60,48,"#e8c07a","#8a5a3a",true) + house(1120,596,76,60,"#c96f5a","#7a3f35",true)
+      + `<g transform="translate(1220 600)"><rect x="0" y="-70" width="40" height="70" fill="#efe4d4"/><path d="M-6 -70 L20 -122 L46 -70Z" fill="#fff"/><rect x="14" y="-55" width="12" height="18" rx="6" class="towerWin"/></g>`
+      + hillFront1("#f3f7fc") + fir(330,790,.9,true) + fir(1330,800,1,true)
+      + hillFront2("#ffffff") + fir(110,880,2.2,true) + fir(1510,890,2.4,true),
+    deko: xmasTree(400,840,1.25)
+  }),
+  winter: () => ({
+    land: hillsBack("#e9eff8","#dde6f2")
+      + fir(560,520,.35,true) + fir(610,530,.3,true) + fir(1000,505,.4,true) + fir(1060,515,.32,true) + fir(1250,495,.38,true)
+      + hillFront1("#f4f8fd")
+      + `<ellipse cx="1080" cy="742" rx="230" ry="30" fill="#bfe0f2"/><path d="M930 738 h70 M1060 748 h90 M1170 736 h40" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`
+      + fir(330,790,.95,true) + fir(400,805,.7,true)
+      + hillFront2("#ffffff") + fir(120,880,2.2,true) + fir(1500,890,2.3,true)
+      + `<g fill="#fff"><ellipse cx="700" cy="850" rx="70" ry="22"/><ellipse cx="1280" cy="860" rx="60" ry="18"/></g>`,
+    deko: ""
+  }),
+  fasching: () => ({
+    land: hillsBack("#d3e3b5","#bdd69f")
+      + house(930,598,66,52,"#ff9ab2","#c45a7a") + house(1015,590,58,46,"#7ec8ff","#3f7fb5") + house(1095,598,70,56,"#ffd34f","#c9883a") + house(1185,592,60,50,"#b9a0ff","#6e55c9")
+      + hillFront1("#aacd80") + fir(330,790,.9,false) + fir(1330,800,1,false,"#3f7f55")
+      + hillFront2("#98c26e") + fir(110,880,2.2,false) + fir(1510,890,2.3,false,"#3f7f55"),
+    deko: bunting(-20,820,40,55,["#ff5a7a","#ffd34f","#5fc8ff","#7ee08a","#b07cff","#ff9a3c"])
+      + bunting(780,1620,30,45,["#7ee08a","#ff9a3c","#ff5a7a","#5fc8ff","#ffd34f","#b07cff"])
+      + balloon(300,330,"#ff5a7a") + balloon(360,290,"#5fc8ff") + balloon(1320,340,"#ffd34f") + balloon(1380,300,"#7ee08a")
+  }),
+  fruehling: () => ({
+    land: hillsBack("#c6e69c","#aedf82")
+      + `<g>${[[980,505],[1060,498],[620,520]].map(([x,y])=>`<rect x="${x-4}" y="${y}" width="8" height="26" fill="#7a5a3a"/><circle cx="${x}" cy="${y-8}" r="24" fill="#f7c6d9"/><circle cx="${x-10}" cy="${y-14}" r="6" fill="#fff"/>`).join("")}</g>`
+      + hillFront1("#97d06a") + tulip(560,705,"#ff6b6b") + tulip(600,715,"#ffd34f") + tulip(1150,700,"#b07cff") + tulip(1190,710,"#ff8fb1")
+      + hillFront2("#86c55c") + meadowFlowers(FL_POS)
+      + bigTrees(["#f7c6d9","#fbe0ea","#f3a9c4","#ffeef4"], "#ffffff", "#7a5a3a"),
+    deko: ""
+  }),
+  ostern: () => { const f = SCENES.fruehling(); const ec=["#7ec8ff","#ff8fb1","#ffd34f","#7ee08a","#b07cff","#ff9a3c"];
+    f.land += [[470,800,-15],[760,835,10],[1010,800,20],[1420,820,-10],[640,870,25],[280,870,0]].map(([x,y,r],i)=>egg(x,y,ec[i%6],1,r)).join("")
+      + `<g transform="translate(1230 830)"><path d="M-55 -20 Q-50 30 0 32 Q50 30 55 -20Z" fill="#c98a4a"/><path d="M-50 -6 H50 M-46 10 H46" stroke="#a86d34" stroke-width="4"/>
+         <path d="M-48 -20 Q0 -95 48 -20" stroke="#a86d34" stroke-width="7" fill="none"/>${egg(-26,-26,"#ff8fb1",.9,-20)}${egg(0,-30,"#7ec8ff",.9,0)}${egg(26,-26,"#ffd34f",.9,20)}
+         <path d="M-55 -20 Q0 -8 55 -20" stroke="#7ad06a" stroke-width="8" fill="none"/></g>`;
+    return f; },
+  sommer: () => ({
+    land: hillsBack("#a5d670","#8fcb5c")
+      + `<ellipse cx="1000" cy="672" rx="430" ry="44" fill="#8fd0ef"/><path d="M760 668 h60 M900 680 h90 M1110 664 h70 M1200 684 h50" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".8"/>`
+      + hillFront1("#7dc051") + sunflower(300,690,1.1) + sunflower(385,715,.9) + sunflower(1250,700,1) + sunflower(1335,725,.85)
+      + hillFront2("#6eb445") + meadowFlowers(FL_POS.slice(0,12))
+      + bigTrees(["#5fae4a","#78c25a","#4f9e3e","#8fd06a"]),
+    deko: ""
+  })
+};
+
+/* ---------- Effekte pro Thema ---------- */
+function buildFx(key){
+  const fx = $("fx"); fx.innerHTML = "";
+  const R = Math.random;
+  const add = (cls, css, txt) => { const e=document.createElement("div"); e.className=cls; Object.assign(e.style, css); if (txt) e.textContent = txt; fx.appendChild(e); return e; };
+  const falling = (cls, n, cols) => { for (let i=0;i<n;i++) add(cls,{left:R()*100+"vw",background:cols[i%cols.length],animationDuration:(8+R()*9)+"s",animationDelay:(-R()*18)+"s"}); };
+  const flies = n => { for (let i=0;i<n;i++) add("firefly",{left:R()*96+"vw",top:(45+R()*50)+"vh",animationDuration:(6+R()*6)+"s",animationDelay:(-R()*8)+"s"}); };
+  const snow = n => { for (let i=0;i<n;i++){ const s=3+R()*7; add("snow",{left:R()*100+"vw",width:s+"px",height:s+"px",animationDuration:(8+R()*10)+"s",animationDelay:(-R()*18)+"s",opacity:(.5+R()*.5).toFixed(2)}); } };
+  const critters = (list) => list.forEach(t => add("critter",{left:(5+R()*85)+"vw",top:(48+R()*36)+"vh",animationDuration:(7+R()*6)+"s",animationDelay:(-R()*8)+"s"}, t));
+  if (key==="herbst" || key==="halloween"){ falling("leaf",14,["#f0a030","#e46c2c","#f7c948","#d9542b","#c9844a"]); flies(16); }
+  else if (key==="november") falling("leaf",7,["#a0703f","#8a5a2b","#c08a4a"]);
+  else if (key==="advent" || key==="winter") snow(70);
+  else if (key==="fasching") falling("conf",45,["#ff5a7a","#ffd34f","#5fc8ff","#7ee08a","#b07cff","#ff9a3c"]);
+  else if (key==="fruehling"){ falling("petal",14,["#f7c6d9","#ffffff","#f3a9c4"]); critters(["🦋","🦋","🐝","🦋","🐝"]); }
+  else if (key==="ostern"){ falling("petal",10,["#f7c6d9","#ffffff","#fff3a8"]); critters(["🦋","🦋","🦋"]); }
+  else if (key==="sommer"){ critters(["🦋","🦋","🐝","🦋","🐝"]); flies(14); }
+}
+
+/* ---------- Gesicht (gleicher Stil wie die Fledermaus) ---------- */
+function face(st, o={}){
+  const x=o.x??150, y=o.y??132, s=o.s??1, my=o.my??0, br=o.br||"#57475e", ink="#3b2a3f";
+  let e="", b="", m="", t="";
+  if (st<=2) e=`<circle cx="124" cy="132" r="16" fill="${ink}"/><circle cx="176" cy="132" r="16" fill="${ink}"/><circle cx="129" cy="126" r="5.5" fill="#fff"/><circle cx="181" cy="126" r="5.5" fill="#fff"/><circle cx="119" cy="138" r="2.5" fill="#fff"/><circle cx="171" cy="138" r="2.5" fill="#fff"/>`;
+  if (st===3) e=`<circle cx="122" cy="130" r="21" fill="#fff" stroke="${ink}" stroke-width="3"/><circle cx="178" cy="130" r="21" fill="#fff" stroke="${ink}" stroke-width="3"/><circle cx="122" cy="132" r="9" fill="${ink}"/><circle cx="178" cy="132" r="9" fill="${ink}"/><circle cx="125" cy="129" r="3" fill="#fff"/><circle cx="181" cy="129" r="3" fill="#fff"/>`;
+  if (st===4) e=`<g stroke="${ink}" stroke-width="4.5" fill="none" stroke-linecap="round"><path d="M110 130 Q124 142 138 130"/><path d="M162 130 Q176 142 190 130"/></g>`;
+  if (st===2) b=`<g stroke="${br}" stroke-width="5" stroke-linecap="round"><path d="M108 104 L136 112"/><path d="M192 104 L164 112"/></g>`;
+  if (st===3) b=`<g stroke="${br}" stroke-width="5" fill="none" stroke-linecap="round"><path d="M106 102 Q122 90 138 100"/><path d="M194 102 Q178 90 162 100"/></g>`;
+  if (st===4) b=`<g stroke="${br}" stroke-width="5" stroke-linecap="round"><path d="M110 114 L136 104"/><path d="M190 114 L164 104"/></g>`;
+  if (st===1) m=`<path d="M132 158 Q150 178 168 158" stroke="${ink}" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M141 164 l4 8 l4 -6.5z" fill="#fff"/>`;
+  if (st===2) m=`<path d="M134 166 Q142 160 150 166 Q158 172 166 166" stroke="${ink}" stroke-width="4.5" fill="none" stroke-linecap="round"/>`;
+  if (st===3) m=`<ellipse cx="150" cy="168" rx="10" ry="13" fill="${ink}"/><ellipse cx="150" cy="175" rx="6" ry="4" fill="#f28da6"/>`;
+  if (st===4) m=`<path d="M132 174 Q150 156 168 174" stroke="${ink}" stroke-width="4.5" fill="none" stroke-linecap="round"/>`;
+  const blush = st<=2 ? `<g fill="${o.blush||"#f59fb5"}" opacity=".65"><ellipse cx="102" cy="156" rx="12" ry="7"/><ellipse cx="198" cy="156" rx="12" ry="7"/></g>` : "";
+  if (st===4) t=`<g stroke="#8fd3ff" stroke-width="6" stroke-linecap="round" fill="none" opacity=".85"><path d="M114 140 Q108 160 112 182"/><path d="M186 140 Q192 160 188 182"/></g><g fill="#8fd3ff"><path class="drop" d="M112 178 q-7 11 0 15 q7 -4 0 -15z"/><path class="drop d2" d="M188 178 q-7 11 0 15 q7 -4 0 -15z"/></g>`;
+  return `<g transform="translate(${(x-150*s).toFixed(1)} ${(y-132*s).toFixed(1)}) scale(${s})">${blush}${e}${b}<g transform="translate(0 ${my/s})">${m}</g>${t}</g>`;
+}
+const shadow = (w=80) => `<ellipse cx="150" cy="312" rx="${w}" ry="10" fill="rgba(0,0,0,.14)"/>`;
+const mirror = s => `<g transform="matrix(-1 0 0 1 300 0)">${s}</g>`;
+
+/* ---------- Figuren ---------- */
+function snowman(st, xmas){
+  const hat = xmas ? "#d9434b" : "#4a7fd1", hat2 = "#ffffff", sc1 = xmas ? "#d9434b" : "#4a7fd1", sc2 = xmas ? "#3f8f5a" : "#ffffff";
+  const arm = st===3 ? "M98 222 L50 158 M64 176 L44 170 M64 176 L60 156" : st===4 ? "M98 236 L58 278 M70 266 L50 266 M70 266 L66 284" : "M98 228 L44 196 M60 205 L40 210 M60 205 L52 188";
+  const armL = `<path d="${arm}" stroke="#6b4a32" stroke-width="6" fill="none" stroke-linecap="round"/>`;
+  const armR = st===1 ? `<g class="wiggle" style="transform-origin:202px 228px">${mirror(armL)}</g>` : mirror(armL);
+  const hatY = st===3 ? -18 : 0;
+  const hatSvg = xmas
+    ? `<path d="M90 100 Q96 40 158 36 Q214 34 238 80 L224 88 Q206 62 210 100Z" fill="${hat}"/><circle cx="232" cy="90" r="15" fill="${hat2}"/><rect x="84" y="86" width="132" height="22" rx="11" fill="${hat2}"/>`
+    : `<path d="M90 100 Q94 34 150 30 Q206 34 210 100Z" fill="${hat}"/><path d="M98 66 H202 M94 82 H206" stroke="#9cc4f5" stroke-width="6"/><circle cx="150" cy="28" r="16" fill="#9cc4f5"/><rect x="84" y="86" width="132" height="22" rx="11" fill="#9cc4f5"/>`;
+  const puddle = st===4 ? `<ellipse cx="150" cy="312" rx="118" ry="16" fill="#bfe3f7"/><g fill="#8fd3ff"><path class="drop" d="M96 250 q-6 9 0 13 q6 -4 0 -13z"/><path class="drop d2" d="M206 240 q-6 9 0 13 q6 -4 0 -13z"/></g>` : shadow(82);
+  return `${puddle}<g class="${st===4?"melt":""}" style="transform-origin:150px 312px">
+    ${armL}${armR}
+    <circle cx="150" cy="248" r="64" fill="#fff" stroke="#d3deeb" stroke-width="3"/><path d="M106 272 Q150 312 194 272" stroke="#e3ebf5" stroke-width="10" fill="none"/>
+    <circle cx="150" cy="232" r="6" fill="#3b2a3f"/><circle cx="150" cy="254" r="6" fill="#3b2a3f"/><circle cx="150" cy="276" r="6" fill="#3b2a3f"/>
+    <circle cx="150" cy="140" r="64" fill="#fff" stroke="#d3deeb" stroke-width="3"/>
+    ${face(st,{y:136,s:.82,my:9,blush:"#ffb3c6"})}
+    <path d="M144 150 L188 157 L144 162Z" fill="#f08a2b"/><path d="M158 152 l-2 8 M170 154 l-2 6" stroke="#d66d14" stroke-width="2"/>
+    <path d="M96 192 Q150 214 204 192 L206 208 Q150 230 94 208Z" fill="${sc1}"/><path d="M120 202 l6 12 M150 206 l0 14 M180 202 l-6 12" stroke="${sc2}" stroke-width="5"/>
+    <path d="M168 206 L172 262 L194 258 L188 204Z" fill="${sc1}"/><path d="M171 228 L190 226 M172 246 L192 244" stroke="${sc2}" stroke-width="5"/>
+    <g transform="translate(0 ${hatY})">${hatSvg}</g>
+  </g>`;
+}
+
+function igel(st){
+  let tips = "";
+  const a0 = 168, a1 = 372, n = 26;
+  for (let i=0;i<=n;i++){
+    const a = (a0 + (a1-a0)*i/n) * Math.PI/180, r = i%2 ? 104 : 132;
+    tips += `${i?"L":"M"}${(150+Math.cos(a)*r).toFixed(1)} ${(190+Math.sin(a)*r).toFixed(1)} `;
+  }
+  const puff = st===3 ? `transform="translate(150 190) scale(1.07) translate(-150 -190)"` : "";
+  const glow = st===4 ? .45 : 1;
+  return `${shadow(90)}
+    <g ${puff}><path d="${tips} L150 300Z" fill="#7a5a42"/><path d="${tips} L150 300Z" fill="#8e6c50" transform="translate(150 196) scale(.86) translate(-150 -196)"/></g>
+    <ellipse cx="150" cy="262" rx="66" ry="46" fill="#e8c9a0"/>
+    <ellipse cx="122" cy="304" rx="22" ry="10" fill="#6b4f3a"/><ellipse cx="178" cy="304" rx="22" ry="10" fill="#6b4f3a"/>
+    <circle cx="96" cy="118" r="15" fill="#e8c9a0"/><circle cx="96" cy="118" r="8" fill="#f2b8c6"/><circle cx="204" cy="118" r="15" fill="#e8c9a0"/><circle cx="204" cy="118" r="8" fill="#f2b8c6"/>
+    <ellipse cx="150" cy="176" rx="80" ry="70" fill="#f0d9b8"/>
+    ${face(st,{y:166,s:.78,my:10})}
+    <ellipse cx="150" cy="184" rx="10" ry="7.5" fill="#3b2a3f"/><circle cx="147" cy="181" r="2.4" fill="#fff"/>
+    <ellipse cx="98" cy="252" rx="13" ry="11" fill="#d9b48a"/>
+    <g class="${st===1?"sway":""}" style="transform-origin:206px 252px">
+      <path d="M206 250 L252 110" stroke="#6b4a32" stroke-width="5" stroke-linecap="round"/><path d="M252 110 Q266 108 266 124" stroke="#5a3f2e" stroke-width="2.5" fill="none"/>
+      <g opacity="${glow}"><circle class="nightOnly" cx="266" cy="152" r="46" fill="url(#gGlow)"/>
+      <rect x="252" y="124" width="28" height="5" rx="2" fill="#5a3f2e"/><circle cx="266" cy="152" r="23" fill="#ff9a3c"/><circle cx="266" cy="152" r="14" fill="#fff6c0" opacity=".55"/>
+      <path d="M266 136 l3 7 l7 1 l-5 5 l1 7 l-6 -3 l-6 3 l1 -7 l-5 -5 l7 -1z" fill="#ffd34f"/>
+      <rect x="252" y="175" width="28" height="5" rx="2" fill="#5a3f2e"/></g>
+      <ellipse cx="206" cy="250" rx="13" ry="11" fill="#d9b48a"/>
+    </g>`;
+}
+
+function clown(st){
+  const hatY = st===3 ? -20 : 0;
+  const handY = st===3 ? 196 : st===4 ? 276 : 240;
+  let ruff = "";
+  for (let i=0;i<10;i++){ const t=i/9, x=92+116*t, y=182+Math.sin(t*Math.PI)*14; ruff += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="17" fill="${i%2?"#ffd34f":"#ffffff"}" stroke="#f0c2d4" stroke-width="2"/>`; }
+  const hand = `<circle cx="84" cy="${handY}" r="15" fill="#fff" stroke="#e3d5ea" stroke-width="2"/>`;
+  return `${shadow(90)}
+    <ellipse cx="114" cy="304" rx="30" ry="13" fill="#e8343f"/><ellipse cx="186" cy="304" rx="30" ry="13" fill="#e8343f"/>
+    <ellipse cx="150" cy="246" rx="68" ry="62" fill="#7aa8f0"/>
+    <g fill="#ffd34f"><circle cx="122" cy="232" r="9"/><circle cx="178" cy="262" r="9"/><circle cx="150" cy="284" r="8"/></g><g fill="#ff7a8a"><circle cx="176" cy="226" r="8"/><circle cx="118" cy="272" r="8"/><circle cx="150" cy="250" r="7"/></g>
+    ${hand}${st===1 ? `<g class="wiggle" style="transform-origin:206px 240px">${mirror(hand)}</g>` : mirror(hand)}
+    ${ruff}
+    <g fill="#ff8a3c"><circle cx="92" cy="104" r="19"/><circle cx="84" cy="130" r="17"/><circle cx="92" cy="154" r="14"/><circle cx="208" cy="104" r="19"/><circle cx="216" cy="130" r="17"/><circle cx="208" cy="154" r="14"/></g>
+    <circle cx="150" cy="128" r="62" fill="#ffe7d4"/>
+    ${face(st,{y:122,s:.82,my:15,blush:"#ff8fa8"})}
+    <circle cx="150" cy="145" r="13" fill="#e8343f"/><circle cx="145" cy="140" r="4" fill="#fff" opacity=".75"/>
+    <g transform="translate(0 ${hatY}) rotate(-8 150 76)"><path d="M112 78 L150 -8 L188 78Z" fill="#b07cff"/><path d="M128 42 L172 42 M138 18 L162 18 M118 64 L182 64" stroke="#ffd34f" stroke-width="7"/><circle cx="150" cy="-10" r="13" fill="#ffd34f"/><rect x="106" y="72" width="88" height="12" rx="6" fill="#ff5a7a"/></g>`;
+}
+
+function blossom(st){
+  const droop = st===4, wide = st===3;
+  const c1 = droop ? "#e6c2cf" : "#f7a8c4", c2 = droop ? "#efd6df" : "#fbc9db";
+  let petals = "";
+  for (let i=0;i<10;i++){
+    let a = i*36; if (droop) a = a + (180-a)*0.32;
+    const dist = wide ? 80 : 72, ry = wide ? 44 : 40;
+    petals += `<ellipse cx="150" cy="${132-dist}" rx="26" ry="${ry}" fill="${i%2?c1:c2}" transform="rotate(${a.toFixed(1)} 150 132)"/>`;
+  }
+  const leafL = `<path d="M148 262 Q100 230 72 252 Q104 280 148 272Z" fill="#62b04c"/>`, leafR = `<path d="M152 238 Q200 202 228 220 Q200 254 152 250Z" fill="#62b04c"/>`;
+  return `${shadow(70)}<ellipse cx="150" cy="312" rx="56" ry="10" fill="#7cc254"/>
+    <path d="M150 192 Q140 250 150 312" stroke="#4f9a3e" stroke-width="12" fill="none" stroke-linecap="round"/>
+    ${droop ? `<g transform="rotate(-24 148 266)">${leafL}</g><g transform="rotate(24 152 244)">${leafR}</g>` : leafL+leafR}
+    <g class="${st===1?"sway":""}" style="transform-origin:150px 312px"><g ${droop?`transform="rotate(16 150 200)"`:""}>
+      ${petals}<circle cx="150" cy="132" r="58" fill="#ffd96a"/><circle cx="150" cy="132" r="52" fill="none" stroke="#f4c24a" stroke-width="4" stroke-dasharray="2 10"/>
+      ${face(st,{y:128,s:.72,blush:"#ff9fb3"})}
+    </g></g>
+    ${st===1 ? `<g class="flyAround"><text x="196" y="44" font-size="30">🐝</text></g>` : ""}`;
+}
+
+function bunny(st){
+  const fur="#d8c3ad", fur2="#c4ab92", inner="#f6b9c9";
+  const aL = {1:-12,2:-8,3:-2,4:-104}[st], aR = -aL;
+  const earL = `<g transform="rotate(${aL} 122 92)"><ellipse cx="122" cy="34" rx="22" ry="60" fill="${fur}"/><ellipse cx="122" cy="38" rx="11" ry="44" fill="${inner}"/></g>`;
+  const earR = `<g transform="rotate(${aR} 178 92)"><ellipse cx="178" cy="34" rx="22" ry="60" fill="${fur}"/><ellipse cx="178" cy="38" rx="11" ry="44" fill="${inner}"/></g>`;
+  const held = st!==4;
+  return `${shadow(86)}
+    ${earL}${st===1 ? `<g class="wiggle" style="transform-origin:178px 92px">${earR}</g>` : earR}
+    <ellipse cx="112" cy="302" rx="30" ry="14" fill="${fur2}"/><ellipse cx="188" cy="302" rx="30" ry="14" fill="${fur2}"/>
+    <ellipse cx="150" cy="248" rx="62" ry="60" fill="${fur}"/><ellipse cx="150" cy="258" rx="40" ry="44" fill="#fff6ee"/>
+    <circle cx="150" cy="140" r="64" fill="${fur}"/><ellipse cx="150" cy="170" rx="36" ry="26" fill="#fff6ee"/>
+    ${face(st,{y:130,s:.86,my:14})}
+    <path d="M141 158 Q150 151 159 158 Q150 169 141 158Z" fill="#f28da6"/>
+    <g stroke="#b39a84" stroke-width="2" stroke-linecap="round"><path d="M116 164 L80 156 M116 172 L80 174"/><path d="M184 164 L220 156 M184 172 L220 174"/></g>
+    ${held ? `${egg(150,252,"#7ec8ff",1.6)}<ellipse cx="118" cy="252" rx="15" ry="12" fill="${fur}"/><ellipse cx="182" cy="252" rx="15" ry="12" fill="${fur}"/>`
+           : `<ellipse cx="104" cy="262" rx="14" ry="12" fill="${fur}"/><ellipse cx="196" cy="262" rx="14" ry="12" fill="${fur}"/>${egg(238,298,"#7ec8ff",1.2,72)}`}`;
+}
+
+function ladybug(st){
+  const tip = {1:[[108,20],[192,20]],2:[[112,26],[188,26]],3:[[120,4],[180,4]],4:[[86,64],[214,64]]}[st];
+  const ant = (bx,[tx,ty],cx) => `<path d="M${bx} 74 Q${cx} 40 ${tx} ${ty}" stroke="#3b2a3f" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="${tx}" cy="${ty}" r="9" fill="#3b2a3f"/>`;
+  const legs = `<path d="M58 196 L30 186 M54 236 L24 244 M68 276 L44 296" stroke="#3b2a3f" stroke-width="7" stroke-linecap="round"/>`;
+  return `${shadow(96)}
+    ${ant(134,tip[0],118)}${ant(166,tip[1],182)}
+    <ellipse cx="150" cy="88" rx="50" ry="32" fill="#3b2a3f"/><circle cx="132" cy="80" r="5" fill="#fff" opacity=".5"/>
+    ${legs}${st===1 ? `<g class="wiggle" style="transform-origin:246px 196px">${mirror(legs)}</g>` : mirror(legs)}
+    <circle cx="150" cy="192" r="104" fill="#e8434f"/>
+    <ellipse cx="104" cy="128" rx="26" ry="13" fill="#fff" opacity=".3" transform="rotate(-35 104 128)"/>
+    <g fill="#3b2a3f"><circle cx="72" cy="176" r="16"/><circle cx="228" cy="176" r="16"/><circle cx="88" cy="240" r="14"/><circle cx="212" cy="240" r="14"/><circle cx="150" cy="276" r="15"/><circle cx="112" cy="112" r="9"/><circle cx="188" cy="112" r="9"/></g>
+    ${face(st,{y:178,s:.8,blush:"#ffc2cc",br:"#3b2a3f"})}`;
+}
+
+const FIGS = {
+  igel, clown, bunny, ladybug, flower: blossom,
+  snowX: st => snowman(st, true), snow: st => snowman(st, false)
+};
+
+/* ---------- Thema anwenden ---------- */
+function applyTheme(force){
+  const k = curThemeKey();
+  if (k === curTheme && !force) return;
+  curTheme = k;
+  const sc = SCENES[k]();
+  $("land").innerHTML = sc.land;
+  $("themeDeko").innerHTML = sc.deko || "";
+  buildFx(k);
+  document.querySelectorAll(".themeIco").forEach(e => e.textContent = THEMES[k].ico);
+  render();
+}
+function cycleTheme(){
+  const opts = ["auto", ...ORDER];
+  const sel = urlTheme || S.theme;
+  const next = opts[(opts.indexOf(sel)+1) % opts.length];
+  urlTheme = null; S.theme = next; save(); applyTheme(); syncSettings();
+  const t = THEMES[curTheme];
+  toast(next === "auto" ? `🗓️ Automatisch nach Datum: ${t.ico} ${t.name}` : `${t.ico} Thema: ${t.name}`);
+}
+(function buildThemeGrid(){
+  const g = $("themeGrid");
+  [["auto","🗓️","Automatisch","wechselt nach Datum"], ...ORDER.map(k => [k, THEMES[k].ico, THEMES[k].name, THEMES[k].sub])].forEach(([k,ico,n,sub]) => {
+    const b = document.createElement("button"); b.dataset.v = k;
+    b.innerHTML = `<span style="font-size:22px">${ico}</span><span>${n}<small>${sub}</small></span>`;
+    b.addEventListener("click", () => { urlTheme = null; S.theme = k; save(); applyTheme(); syncSettings(); });
+    g.appendChild(b);
+  });
+})();
+function syncTheme(){
+  const sel = urlTheme || S.theme;
+  document.querySelectorAll("#themeGrid button").forEach(b => b.classList.toggle("on", b.dataset.v === sel));
+  const a = THEMES[autoTheme()];
+  $("themeHint").textContent = urlTheme ? `Gerade vom Link vorgegeben: ${THEMES[urlTheme].ico} ${THEMES[urlTheme].name}.`
+    : `„Automatisch“ zeigt ${refDate ? "für diese Woche" : "heute"}: ${a.ico} ${a.name}. Halloween ab 17.10., St. Martin im November, Advent ab dem 1. Advent bis 6.1., Fasching ab der Woche vor Rosenmontag, Ostern rund um die Osterferien.`;
+}
+setInterval(() => applyTheme(), 10*60*1000);
 
 /* ---------- Stufen-Buttons ---------- */
 function miniFace(n){
@@ -659,7 +1049,7 @@ function miniFace(n){
     3:`<circle cx="23" cy="30" r="5.5" fill="#fff" stroke="#3b2a3f" stroke-width="1.6"/><circle cx="37" cy="30" r="5.5" fill="#fff" stroke="#3b2a3f" stroke-width="1.6"/><circle cx="23" cy="31" r="2.4" fill="#3b2a3f"/><circle cx="37" cy="31" r="2.4" fill="#3b2a3f"/><ellipse cx="30" cy="41" rx="3.4" ry="4.4" fill="#3b2a3f"/>`,
     4:`<path d="M19 30 q5 4 9 0 M32 30 q5 4 9 0" stroke="#3b2a3f" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M24 44 Q30 38 36 44" stroke="#3b2a3f" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M20 34 q-3 6 0 8 q3 -2 0 -8z M40 34 q-3 6 0 8 q3 -2 0 -8z" fill="#5fb8f0"/>`
   }[n];
-  return `<svg viewBox="0 0 60 60"><path d="M15 26 L10 6 Q22 11 26 20Z M45 26 L50 6 Q38 11 34 20Z" fill="#7a6a80"/><path d="M16 22 L14 11 Q20 14 22 19Z M44 22 L46 11 Q40 14 38 19Z" fill="#f2b8c6"/><ellipse cx="30" cy="35" rx="19" ry="17" fill="#8a7a8e"/>${face}</svg>`;
+  return `<svg viewBox="0 0 60 60"><ellipse cx="30" cy="34" rx="22" ry="20" fill="#ffe9d2"/>${face}</svg>`;
 }
 const stagesEl = $("stages");
 for (let n=1;n<=4;n++){
@@ -684,7 +1074,11 @@ const LOOKS = {
 function render(){
   document.body.classList.toggle("night", S.night);
   document.body.classList.toggle("day", !S.night);
-  document.body.classList.toggle("halloween", S.halloween);
+  document.body.classList.toggle("halloween", curTheme === "halloween");
+  const isBat = THEMES[curTheme].fig === "bat";
+  $("bat").style.display = isBat ? "" : "none";
+  $("fig").style.display = isBat ? "none" : "";
+  if (!isBat) $("fig").innerHTML = `<g class="figBob">${FIGS[THEMES[curTheme].fig](stage)}</g>`;
   document.body.classList.toggle("mic", S.mode === "mic");
   for (let i=1;i<=4;i++) document.body.classList.toggle("s"+i, stage===i);
   document.documentElement.style.setProperty("--stage", `var(--s${stage})`);
@@ -698,7 +1092,8 @@ function render(){
   document.querySelectorAll(".sbtn").forEach(b => b.classList.toggle("active", +b.dataset.n === stage));
   $("tDay").textContent = S.night ? "☀️" : "🌙";
   $("tDay").title = S.night ? "Zum Tag wechseln" : "Zur Nacht wechseln";
-  $("tHallo").classList.toggle("dim", !S.halloween);
+  $("tTheme").textContent = THEMES[curTheme].ico;
+  $("tTheme").title = `Thema: ${THEMES[curTheme].name} (antippen zum Wechseln)`;
   $("tSound").textContent = S.sound ? "🔊" : "🔇";
   $("tMic").classList.toggle("active", S.mode === "mic");
   renderGems(); renderTimer(); renderThresholds();
@@ -810,7 +1205,7 @@ function finishPhase(){
   const names = ["Grün","Gelb","Orange","Rot"];
   $("evalBars").innerHTML = p.map((v,i) => `<b>${names[i]}</b><div class="bar"><span style="width:${v.toFixed(1)}%;background:${ST[i]}"></span></div><b>${Math.round(v)} %</b>`).join("");
   let stars = "⭐".repeat(earned) + (penalty ? '<span class="lost">⭐</span>' : "");
-  $("evalStars").innerHTML = stars || "🦇";
+  $("evalStars").innerHTML = stars || THEMES[curTheme].ico;
   const net = earned - penalty;
   let msg = earned === 2 ? `Super! ${Math.round(p[0])} % im grünen Bereich – 2 Sterne!` :
             earned === 1 ? `Gut gemacht! ${Math.round(p[0])} % Grün – 1 Stern.` :
@@ -919,7 +1314,7 @@ async function setMode(m){
   S.mode = m; save(); render(); syncSettings();
 }
 $("tDay").addEventListener("click", () => { S.night = !S.night; save(); render(); });
-$("tHallo").addEventListener("click", () => { S.halloween = !S.halloween; save(); render(); });
+$("tTheme").addEventListener("click", cycleTheme);
 $("tSound").addEventListener("click", () => { S.sound = !S.sound; save(); render(); syncSettings(); if (S.sound){ ac(); sndPop(); } });
 $("tMic").addEventListener("click", () => setMode(S.mode === "mic" ? "hand" : "mic"));
 $("tFull").addEventListener("click", toggleFull);
@@ -949,6 +1344,7 @@ function syncSettings(){
   document.querySelectorAll("#segMin button").forEach(b => b.classList.toggle("on", +b.dataset.v === S.timerMin));
   $("gemSet").value = S.diamonds; $("goal").value = S.goal; $("reward").value = S.reward; $("removeOn").checked = S.removeOn; $("soundOn").checked = S.sound;
   $("micTestRow").style.display = micRunning ? "none" : "";
+  syncTheme();
 }
 document.querySelectorAll("#segMode button").forEach(b => b.addEventListener("click", () => setMode(b.dataset.v)));
 ["t2","t3","t4"].forEach(k => $(k).addEventListener("input", () => {
@@ -999,7 +1395,7 @@ document.addEventListener("keydown", e => {
   else if (k==="arrowup") { manualHoldUntil = performance.now()+4000; setStage(Math.min(4, stage+1)); }
   else if (k==="arrowdown") { manualHoldUntil = performance.now()+4000; setStage(Math.max(1, stage-1)); }
   else if (k==="t") $("tDay").click();
-  else if (k==="h") $("tHallo").click();
+  else if (k==="h") cycleTheme();
   else if (k==="m") $("tMic").click();
   else if (k==="f") toggleFull();
   else if (k==="+") $("gemPlus").click();
@@ -1016,7 +1412,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 
 /* ---------- Start ---------- */
 if (S.mode === "mic"){ S.mode = "hand"; toast("Tippe auf 🎤, um das Mikrofon wieder einzuschalten."); }
-render(); syncSettings(); renderPauseBtn();
+applyTheme(true); syncSettings(); renderPauseBtn();
 // Speicher dauerhaft anfordern und prüfen, ob der Browser überhaupt speichert
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch(e) {}
 (function checkStorage(){
